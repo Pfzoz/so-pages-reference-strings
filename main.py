@@ -4,6 +4,7 @@
 # Passo 4: Referenciar cada string e gerar a reference string
 import numpy as np # Vetores otimizados e funções vetoriais úteis
 import matplotlib.pyplot as plt # Gráficos/Visualização
+from os import remove
 from sys import argv # Argv para fácil teste
 from collections import OrderedDict
 
@@ -98,3 +99,5 @@ plt.ylabel("Falhas")
 plt.title("Falhas de página")
 plt.show()
 
+if ("-r" in argv):
+    remove("reference_string_" + argv[1])
