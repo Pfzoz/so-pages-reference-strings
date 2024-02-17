@@ -32,7 +32,7 @@ class PreProcessRefString:
                 mask = (future['Page'] == df['Page'].iloc[i])
 
                 if mask.any():
-                    df.at[i, 'Next'] = mask.idxmax() + i + 1
+                    df.at[i, 'Next'] = mask.idxmax()
                 else:
                     df.at[i, 'Next'] = np.Inf
 

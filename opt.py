@@ -34,3 +34,5 @@ class OPT:
         # Retorna o total de falhas de página
         return page_faults
 
+if __name__ == '__main__':
+    print(OPT.optimal_page_replacement('logs/trace1.csv', 4))

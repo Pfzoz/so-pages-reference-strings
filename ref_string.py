@@ -41,5 +41,8 @@ class GenRefString:
     def get__reduction(self):
         return 1- len(self.__clean_trace_list) / len(self.__trace_list)
     
+    def get__sizes(self):
+        return len(self.__clean_trace_list), len(self.__trace_list)
+    
     def get__address(self):
         return self.__trace_list
