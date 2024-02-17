@@ -10,3 +10,6 @@ trace4
 /trace4
 reference_string*
 /reference_string*
+
+logs/*
+__pycache__/*
