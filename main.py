@@ -2,11 +2,12 @@
 # Passo 2: Preencher 0s à esquerda.
 # Passo 3: Remover/ignorar sequências de acesso a mesma página.
 # Passo 4: Referenciar cada string e gerar a reference string
-import numpy as np # Vetores otimizados e funções vetoriais úteis
-import matplotlib.pyplot as plt # Gráficos/Visualização
-from os import remove
-from sys import argv # Argv para fácil teste
-from collections import OrderedDict
+import numpy as np  # Vetores otimizados e funções vetoriais úteis
+import matplotlib.pyplot as plt  # Gráficos/Visualização
+import time
+from os import remove, path
+from sys import argv  # Argv para fácil teste
+import pickle
 
 trace_list = []
 clean_trace_list = []
@@ -51,21 +52,62 @@ print(f"Diferença {100 * unique_access_difference:.3f}%")
 # Simular Algoritmos
 
 
-
 # OPT
 
-def optimal_page_replacement(reference_string, frames):
+def opt_find_positional_table(reference_string: list[str]) -> dict[str, list[int]]:
+    if (path.exists("positional_table_" + argv[1] + ".pickle")):
+        positional_table = pickle.load(open("positional_table_" + argv[1] + ".pickle", "rb"))
+        return positional_table
+    positional_table = {}
+    i = 0
+    original_length = len(reference_string)
+    while (len(reference_string) > 0):
+        print("Table Progress:", i)
+        if reference_string[0] in positional_table:
+            positional_table[reference_string[0]].append(i)
+        else:
+            positional_table[reference_string[0]] = [i]
+        reference_string.pop(0)
+        i += 1
+    for key in positional_table.keys():
+        positional_table[key].append(original_length)
+    with open("positional_table_" + argv[1], "w+") as positional_table_file:
+        for key, value in positional_table.items():
+            positional_table_file.write(f"{key} {value}\n")
+    pickle_file = open("positional_table_" + argv[1] + ".pickle", "wb")
+    pickle.dump(positional_table, pickle_file)
+    pickle_file.close()
+    return positional_table
+
+
+
+def optimal_page_replacement(reference_string: list[str], frames: int):
     page_faults = 0
-    page_table = OrderedDict()
-
-
-
+    positions_table = opt_find_positional_table(reference_string)
+    page_table = []
+    page_amount_count = 0
+    for i in range(len(reference_string)):
+        if i % 1000 == 0:
+            print(i)
+        if not reference_string[i] in page_table:
+            positions_table[reference_string[i]].pop(0)
+            page_faults += 1
+            if page_amount_count >= frames:
+                max_index = 0
+                for i in range(1, len(page_table)):
+                    if positions_table[page_table[i]][0] > max_index:
+                        max_index = i                        
+                page_table[max_index] = reference_string[i]
+            else:
+                page_table.append(reference_string[i])
+                page_amount_count += 1
     return page_faults
 
 
 # LRU
 
-def lru_page_replacement(reference_string, frames):
+
+def lru_page_replacement(reference_string: list[str], frames: int):
     page_faults = 0
     page_table = []
 
@@ -74,7 +116,7 @@ def lru_page_replacement(reference_string, frames):
         if page not in page_table:
             page_faults += 1
             if len(page_table) >= frames:
-                page_table.pop() # Remove a página menos recentemente usada
+                page_table.pop()  # Remove a página menos recentemente usada
             page_table.insert(0, page)
 
     return page_faults
@@ -86,11 +128,11 @@ for i in range(2, 6):
     lru_page_faults.append(page_faults)
     print(f"Número de falhas LRU: {page_faults}")
 
-# opt_page_faults = []
-# for i in range(2, 6):
-#     page_faults = optimal_page_replacement(clean_trace_list, 2**i)
-#     opt_page_faults.append(page_faults)
-#     print(f"Número de falhas OPT: {page_faults}")
+opt_page_faults = []
+for i in range(2, 6):
+    page_faults = optimal_page_replacement(clean_trace_list, 2**i)
+    opt_page_faults.append(page_faults)
+    print(f"Número de falhas OPT: {page_faults}")
 
 plt.plot([4, 8, 16, 32], lru_page_faults)
 
@@ -99,5 +141,12 @@ plt.ylabel("Falhas")
 plt.title("Falhas de página")
 plt.show()
 
-if ("-r" in argv):
+plt.plot([4, 8, 16, 32], opt_page_faults)
+
+plt.xlabel("Qtd. de frames")
+plt.ylabel("Falhas")
+plt.title("Falhas de página")
+plt.show()
+
+if "-r" in argv:
     remove("reference_string_" + argv[1])
